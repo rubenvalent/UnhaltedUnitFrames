@@ -202,8 +202,6 @@ do
 			DispelList.Bleed = cauterizing
 		end
 
-		lib:ListUpdated()
-
 		if undoRanks then
 			SetCVar('ShowAllSpellRanks', '0')
 		end
