@@ -11,6 +11,11 @@ local Defaults = {
             Separator = "||",
             ToTSeparator = "»",
             UseCustomAbbreviations = false,
+            OutOfCombatFade = {
+                UseGlobal = true,
+                GlobalOpacity = 0.5,
+                FadeInWithTarget = false,
+            },
             UIScale = {
                 Enabled = false,
                 Scale = 1.0,
@@ -84,6 +89,11 @@ local Defaults = {
                     Height = 42,
                     Layout = {"CENTER", "CENTER", -425.1, -275.1},
                     FrameStrata = "LOW",
+                    OutOfCombatFade = {
+                        Enabled = false,
+                        Opacity = 0.5,
+                        FadeInWithTarget = false,
+                    },
                 },
                 HealthBar = {
                     ColourByClass = true,
@@ -158,6 +168,7 @@ local Defaults = {
                     ColourByClass = false,
                     Inverse = false,
                     FrameStrata = "MEDIUM",
+                    LinkToFrameFade = false,
                     Icon = {
                         Enabled = true,
                         Position = "LEFT",
@@ -176,7 +187,11 @@ local Defaults = {
                             Layout = {"RIGHT", "RIGHT", -3, 0},
                             Colour = {1, 1, 1},
                         }
-                    }
+                    },
+                    SpellQueue = {
+                        Enabled = true,
+                        Colour = {255/255, 64/255, 64/255, 0.7},
+                    },
                 },
                 Portrait = {
                     Enabled = false,
@@ -313,6 +328,11 @@ local Defaults = {
                     Height = 42,
                     Layout = {"CENTER", "CENTER", 425.1, -275.1},
                     FrameStrata = "LOW",
+                    OutOfCombatFade = {
+                        Enabled = false,
+                        Opacity = 0.5,
+                        FadeInWithTarget = false,
+                    },
                 },
                 HealthBar = {
                     ColourByClass = true,
@@ -517,6 +537,11 @@ local Defaults = {
                     AnchorParent = "UUF_Target",
                     Layout = {"TOPRIGHT", "BOTTOMRIGHT", 0, -26.1},
                     FrameStrata = "LOW",
+                    OutOfCombatFade = {
+                        Enabled = false,
+                        Opacity = 0.5,
+                        FadeInWithTarget = false,
+                    },
                 },
                 HealthBar = {
                     ColourByClass = true,
@@ -699,6 +724,11 @@ local Defaults = {
                     AnchorParent = "UUF_Player",
                     Layout = {"BOTTOMLEFT", "TOPLEFT", 0, 36.1},
                     FrameStrata = "LOW",
+                    OutOfCombatFade = {
+                        Enabled = false,
+                        Opacity = 0.5,
+                        FadeInWithTarget = false,
+                    },
                 },
                 HealthBar = {
                     ColourByClass = true,
@@ -886,6 +916,11 @@ local Defaults = {
                     AnchorParent = "UUF_Focus",
                     Layout = {"LEFT", "RIGHT", 1, 0},
                     FrameStrata = "LOW",
+                    OutOfCombatFade = {
+                        Enabled = false,
+                        Opacity = 0.5,
+                        FadeInWithTarget = false,
+                    },
                 },
                 HealthBar = {
                     ColourByClass = true,
@@ -1068,6 +1103,11 @@ local Defaults = {
                     AnchorParent = "UUF_Player",
                     Layout = {"TOPLEFT", "BOTTOMLEFT", 0, -26.1},
                     FrameStrata = "LOW",
+                    OutOfCombatFade = {
+                        Enabled = false,
+                        Opacity = 0.5,
+                        FadeInWithTarget = false,
+                    },
                 },
                 HealthBar = {
                     ColourByClass = true,
@@ -1251,6 +1291,11 @@ local Defaults = {
                     Layout = {"CENTER", "CENTER", 550.1, -0.1, 26},
                     GrowthDirection = "DOWN",
                     FrameStrata = "LOW",
+                    OutOfCombatFade = {
+                        Enabled = false,
+                        Opacity = 0.5,
+                        FadeInWithTarget = false,
+                    },
                 },
                 HealthBar = {
                     ColourByClass = true,

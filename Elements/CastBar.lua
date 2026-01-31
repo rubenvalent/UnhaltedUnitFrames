@@ -16,7 +16,13 @@ function UUF:CreateUnitCastBar(unitFrame, unit)
     local SpellNameDB = UUF.db.profile.Units[UUF:GetNormalizedUnit(unit)].CastBar.Text.SpellName
     local DurationDB = UUF.db.profile.Units[UUF:GetNormalizedUnit(unit)].CastBar.Text.Duration
 
-    local CastBarContainer = CreateFrame("Frame", UUF:FetchFrameName(unit) .. "_CastBarContainer", unitFrame, "BackdropTemplate")
+    -- Determine parent: UIParent if independent, unitFrame if linked
+    local castBarParent = unitFrame
+    if unit == "player" and CastBarDB.LinkToFrameFade == false then
+        castBarParent = UIParent
+    end
+
+    local CastBarContainer = CreateFrame("Frame", UUF:FetchFrameName(unit) .. "_CastBarContainer", castBarParent, "BackdropTemplate")
     CastBarContainer:SetBackdrop(UUF.BACKDROP)
     CastBarContainer:SetBackdropColor(0, 0, 0, 0)
     CastBarContainer:SetBackdropBorderColor(0, 0, 0, 1)
@@ -45,6 +51,15 @@ function UUF:CreateUnitCastBar(unitFrame, unit)
     CastBar.NotInterruptibleOverlay:SetTexture(UUF.Media.Foreground)
     CastBar.NotInterruptibleOverlay:SetVertexColor(unpack(CastBarDB.NotInterruptibleColour))
     CastBar.NotInterruptibleOverlay:SetAlpha(0) -- Hidden by default
+
+    -- Spell Queue Window Indicator (player only)
+    if unit == "player" then
+        CastBar.SpellQueueOverlay = CastBar:CreateTexture(nil, "ARTWORK", nil, 2)
+        CastBar.SpellQueueOverlay:SetTexture(UUF.Media.Foreground)
+        local sqColor = CastBarDB.SpellQueue and CastBarDB.SpellQueue.Colour or {1, 0.25, 0.25, 0.7}
+        CastBar.SpellQueueOverlay:SetVertexColor(unpack(sqColor))
+        CastBar.SpellQueueOverlay:Hide()
+    end
 
     CastBar.Icon = CastBar:CreateTexture(UUF:FetchFrameName(unit) .. "_CastBarIcon", "ARTWORK")
     CastBar.Icon:SetSize(CastBarDB.Height - 2, CastBarDB.Height - 2)
@@ -130,6 +145,33 @@ function UUF:CreateUnitCastBar(unitFrame, unit)
             end
         end
 
+        local function UpdateSpellQueueOverlay(frameCastBar)
+            if unit ~= "player" or not frameCastBar.SpellQueueOverlay then return end
+            local sqEnabled = CastBarDB.SpellQueue and CastBarDB.SpellQueue.Enabled
+            if sqEnabled and frameCastBar.casting then
+                local castDuration = frameCastBar.endTime - frameCastBar.startTime
+                if castDuration > 0 then
+                    local queueWindow = (tonumber(C_CVar.GetCVar("SpellQueueWindow")) or 400) / 1000
+                    -- Clamp queue window to cast duration
+                    if queueWindow > castDuration then
+                        queueWindow = castDuration
+                    end
+                    local ratio = queueWindow / castDuration
+                    local barWidth = frameCastBar:GetWidth()
+                    local queueWidth = barWidth * ratio
+                    frameCastBar.SpellQueueOverlay:ClearAllPoints()
+                    frameCastBar.SpellQueueOverlay:SetPoint("TOPRIGHT", frameCastBar:GetStatusBarTexture(), "TOPRIGHT")
+                    frameCastBar.SpellQueueOverlay:SetPoint("BOTTOMRIGHT", frameCastBar:GetStatusBarTexture(), "BOTTOMRIGHT")
+                    frameCastBar.SpellQueueOverlay:SetWidth(queueWidth)
+                    frameCastBar.SpellQueueOverlay:Show()
+                else
+                    frameCastBar.SpellQueueOverlay:Hide()
+                end
+            else
+                frameCastBar.SpellQueueOverlay:Hide()
+            end
+        end
+
         unitFrame.Castbar.PostCastStart = function(frameCastBar)
             local spellInfo = C_Spell.GetSpellInfo(frameCastBar.spellID)
             local spellName = spellInfo and spellInfo.name
@@ -140,7 +182,14 @@ function UUF:CreateUnitCastBar(unitFrame, unit)
             end
 
             UpdateNotInterruptibleOverlay(frameCastBar)
+            UpdateSpellQueueOverlay(frameCastBar)
             CastBarContainer:Show()
+        end
+
+        unitFrame.Castbar.PostCastStop = function(frameCastBar)
+            if frameCastBar.SpellQueueOverlay then
+                frameCastBar.SpellQueueOverlay:Hide()
+            end
         end
 
         unitFrame.Castbar.PostCastInterruptible = function(frameCastBar)
@@ -169,6 +218,19 @@ function UUF:UpdateUnitCastBar(unitFrame, unit)
 
         local CastBarContainer = unitFrame.Castbar and unitFrame.Castbar:GetParent()
 
+        -- Handle reparenting for player cast bar based on LinkToFrameFade setting
+        if unit == "player" and CastBarContainer then
+            local desiredParent = unitFrame
+            if CastBarDB.LinkToFrameFade == false then
+                desiredParent = UIParent
+            end
+
+            -- Reparent if needed
+            if CastBarContainer:GetParent() ~= desiredParent then
+                CastBarContainer:SetParent(desiredParent)
+            end
+        end
+
         if not unitFrame:IsElementEnabled("Castbar") then unitFrame:EnableElement("Castbar") end
 
         if unitFrame.Castbar then
@@ -188,6 +250,12 @@ function UUF:UpdateUnitCastBar(unitFrame, unit)
             if unitFrame.Castbar.NotInterruptibleOverlay then
                 unitFrame.Castbar.NotInterruptibleOverlay:SetTexture(UUF.Media.Foreground)
                 unitFrame.Castbar.NotInterruptibleOverlay:SetVertexColor(unpack(CastBarDB.NotInterruptibleColour))
+            end
+
+            if unitFrame.Castbar.SpellQueueOverlay and CastBarDB.SpellQueue then
+                unitFrame.Castbar.SpellQueueOverlay:SetTexture(UUF.Media.Foreground)
+                local sqColor = CastBarDB.SpellQueue.Colour or {1, 0.25, 0.25, 0.7}
+                unitFrame.Castbar.SpellQueueOverlay:SetVertexColor(unpack(sqColor))
             end
 
             if CastBarDB.Inverse then
