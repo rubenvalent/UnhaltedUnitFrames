@@ -117,7 +117,7 @@ function UUF:UpdateUnitFrame(unitFrame, unit)
     if unit ~= "targettarget" and unit ~= "focustarget" then UUF:UpdateUnitCastBar(unitFrame, unit) end
     UUF:UpdateUnitHealthBar(unitFrame, unit)
     UUF:UpdateUnitHealPrediction(unitFrame, unit)
-    UUF:UpdateUnitPortrait(unitFrame, unit)
+    if unit ~= "targettarget" and unit ~= "focustarget" then UUF:UpdateUnitPortrait(unitFrame, unit) end
     UUF:UpdateUnitPowerBar(unitFrame, unit)
     if unit == "player" then UUF:UpdateUnitAlternativePowerBar(unitFrame, unit) end
     if unit == "player" then UUF:UpdateUnitSecondaryPowerBar(unitFrame, unit) end
