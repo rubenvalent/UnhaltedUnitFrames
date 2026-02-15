@@ -19,7 +19,7 @@ function UnhaltedUnitFrames:OnInitialize()
 
     local playerSpecalizationChangedEventFrame = CreateFrame("Frame")
     playerSpecalizationChangedEventFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
-    playerSpecalizationChangedEventFrame:SetScript("OnEvent", function(_, event, ...) if event == "PLAYER_SPECIALIZATION_CHANGED" then local unit = ... if unit == "player" then UUF:UpdateAllUnitFrames() end end end)
+    playerSpecalizationChangedEventFrame:SetScript("OnEvent", function(_, event, ...) if InCombatLockdown() then return end if event == "PLAYER_SPECIALIZATION_CHANGED" then local unit = ... if unit == "player" then UUF:UpdateAllUnitFrames() end end end)
     -- Combat fade event handler
     UUF.CombatFadeEventFrame = CreateFrame("Frame")
     UUF.CombatFadeEventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
@@ -28,6 +28,7 @@ function UnhaltedUnitFrames:OnInitialize()
     UUF.CombatFadeEventFrame:SetScript("OnEvent", function(_, event, ...)
         UUF:UpdateOutOfCombatFade()
     end)
+
 end
 
 function UnhaltedUnitFrames:OnEnable()
