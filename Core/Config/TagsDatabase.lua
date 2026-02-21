@@ -34,11 +34,16 @@ local Tags = {
     ["curhpperhp:abbr"] = "UNIT_HEALTH UNIT_MAXHEALTH",
     ["absorbs"] = "UNIT_ABSORB_AMOUNT_CHANGED",
     ["absorbs:abbr"] = "UNIT_ABSORB_AMOUNT_CHANGED",
+    ["absorbs:truncate"] = "UNIT_ABSORB_AMOUNT_CHANGED",
     ["maxhp:abbr"] = "UNIT_HEALTH UNIT_MAXHEALTH",
 
     ["curpp:colour"] = "UNIT_POWER_UPDATE UNIT_MAXPOWER",
     ["curpp:abbr"] = "UNIT_POWER_UPDATE UNIT_MAXPOWER",
     ["curpp:abbr:colour"] = "UNIT_POWER_UPDATE UNIT_MAXPOWER",
+    ["curpp:manapercent"] = "UNIT_POWER_UPDATE UNIT_MAXPOWER",
+    ["curpp:manapercent:abbr"] = "UNIT_POWER_UPDATE UNIT_MAXPOWER",
+    ["curpp:manapercent-with-sign"] = "UNIT_POWER_UPDATE UNIT_MAXPOWER",
+    ["curpp:manapercent-with-sign:abbr"] = "UNIT_POWER_UPDATE UNIT_MAXPOWER",
 
     ["maxpp:abbr"] = "UNIT_POWER_UPDATE UNIT_MAXPOWER",
     ["maxpp:colour"] = "UNIT_POWER_UPDATE UNIT_MAXPOWER",
@@ -249,6 +254,14 @@ oUF.Tags.Methods["absorbs:abbr"] = function(unit)
     end
 end
 
+oUF.Tags.Methods["absorbs:truncate"] = function(unit)
+    if not unit or not UnitExists(unit) then return "" end
+    local absorbAmount = UnitGetTotalAbsorbs(unit) or 0
+    if absorbAmount then
+        return string.format("%s", C_StringUtil.TruncateWhenZero(absorbAmount))
+    end
+end
+
 oUF.Tags.Methods["curpp:colour"] = function(unit)
     if not unit or not UnitExists(unit) then return "" end
     local powerColourR, powerColourG, powerColourB = FetchUnitPowerColour(unit)
@@ -287,6 +300,18 @@ oUF.Tags.Methods["curpp:manapercent"] = function(unit)
     end
 end
 
+oUF.Tags.Methods["curpp:manapercent-with-sign"] = function(unit)
+    if not unit or not UnitExists(unit) then return "" end
+    local unitPower = UnitPower(unit)
+    local unitPowerType = UnitPowerType(unit)
+    if unitPowerType == Enum.PowerType.Mana and unitPower then
+        local powerPercent = UnitPowerPercent(unit, Enum.PowerType.Mana, true, CurveConstants.ScaleTo100)
+        return string.format("%.f%%", powerPercent)
+    else
+        return string.format("%s", unitPower)
+    end
+end
+
 oUF.Tags.Methods["curpp:manapercent:abbr"] = function(unit)
     if not unit or not UnitExists(unit) then return "" end
     local unitPower = UnitPower(unit)
@@ -294,6 +319,18 @@ oUF.Tags.Methods["curpp:manapercent:abbr"] = function(unit)
     if unitPowerType == Enum.PowerType.Mana and unitPower then
         local powerPercent = UnitPowerPercent(unit, Enum.PowerType.Mana, true, CurveConstants.ScaleTo100)
         return string.format("%.f", powerPercent)
+    else
+        return string.format("%s", AbbreviateValue(unitPower))
+    end
+end
+
+oUF.Tags.Methods["curpp:manapercent-with-sign:abbr"] = function(unit)
+    if not unit or not UnitExists(unit) then return "" end
+    local unitPower = UnitPower(unit)
+    local unitPowerType = UnitPowerType(unit)
+    if unitPowerType == Enum.PowerType.Mana and unitPower then
+        local powerPercent = UnitPowerPercent(unit, Enum.PowerType.Mana, true, CurveConstants.ScaleTo100)
+        return string.format("%.f%%", powerPercent)
     else
         return string.format("%s", AbbreviateValue(unitPower))
     end
@@ -382,6 +419,7 @@ local HealthTags = {
         ["maxhp:abbr"] = "Maximum Health with Abbreviation",
         ["absorbs"] = "Total Absorbs",
         ["absorbs:abbr"] = "Total Absorbs with Abbreviation",
+        ["absorbs:truncate"] = "Total Absorbs but will hide when at zero.",
         ["missinghp"] = "Missing Health",
     },
     {
@@ -393,6 +431,7 @@ local HealthTags = {
         "maxhp:abbr",
         "absorbs",
         "absorbs:abbr",
+        "absorbs:truncate",
         "missinghp",
     }
 
@@ -412,6 +451,8 @@ local PowerTags = {
         ["missingpp"] = "Missing Power",
         ["curpp:manapercent"] = "Current Power but Mana as Percentage",
         ["curpp:manapercent:abbr"] = "Current Power but Mana as Percentage with Abbreviation",
+        ["curpp:manapercent-with-sign"] = "Current Power but Mana as Percentage with % Sign",
+        ["curpp:manapercent-with-sign:abbr"] = "Current Power but Mana as Percentage with % Sign and Abbreviation",
     },
     {
         "perpp",

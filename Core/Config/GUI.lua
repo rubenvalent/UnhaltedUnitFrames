@@ -423,6 +423,32 @@ local function CreateTextureSettings(containerParent)
     BackgroundOpacitySlider:SetIsPercent(true)
     BackgroundOpacitySlider:SetCallback("OnValueChanged", function(_, _, value) for _, unitDB in pairs(UUF.db.profile.Units) do unitDB.HealthBar.BackgroundOpacity = value end UUF:UpdateAllUnitFrames() end)
     Container:AddChild(BackgroundOpacitySlider)
+
+    local CastBarContainer = GUIWidgets.CreateInlineGroup(Container, "Cast Bar")
+
+    local CastBarForegroundColourPicker = AG:Create("ColorPicker")
+    CastBarForegroundColourPicker:SetLabel("Foreground Colour")
+    local CR, CG, CB = 128/255, 128/255, 255/255
+    CastBarForegroundColourPicker:SetColor(CR, CG, CB)
+    CastBarForegroundColourPicker:SetRelativeWidth(0.33)
+    CastBarForegroundColourPicker:SetCallback("OnValueChanged", function(_, _, r, g, b, a) for _, unitDB in pairs(UUF.db.profile.Units) do if unitDB.CastBar then unitDB.CastBar.Foreground = {r, g, b} end end UUF:UpdateAllUnitFrames() end)
+    CastBarContainer:AddChild(CastBarForegroundColourPicker)
+
+    local CastBarBackgroundColourPicker = AG:Create("ColorPicker")
+    CastBarBackgroundColourPicker:SetLabel("Background Colour")
+    local CR2, CG2, CB2 = 34/255, 34/255, 34/255
+    CastBarBackgroundColourPicker:SetColor(CR2, CG2, CB2)
+    CastBarBackgroundColourPicker:SetRelativeWidth(0.33)
+    CastBarBackgroundColourPicker:SetCallback("OnValueChanged", function(_, _, r, g, b, a) for _, unitDB in pairs(UUF.db.profile.Units) do if unitDB.CastBar then unitDB.CastBar.Background = {r, g, b} end end UUF:UpdateAllUnitFrames() end)
+    CastBarContainer:AddChild(CastBarBackgroundColourPicker)
+
+    local CastBarInterruptibleColourPicker = AG:Create("ColorPicker")
+    CastBarInterruptibleColourPicker:SetLabel("Interruptible Colour")
+    local CR3, CG3, CB3 = 255/255, 64/255, 64/255
+    CastBarInterruptibleColourPicker:SetColor(CR3, CG3, CB3)
+    CastBarInterruptibleColourPicker:SetRelativeWidth(0.33)
+    CastBarInterruptibleColourPicker:SetCallback("OnValueChanged", function(_, _, r, g, b, a) for _, unitDB in pairs(UUF.db.profile.Units) do if unitDB.CastBar then unitDB.CastBar.NotInterruptibleColour = {r, g, b} end end UUF:UpdateAllUnitFrames() end)
+    CastBarContainer:AddChild(CastBarInterruptibleColourPicker)
 end
 
 local function CreateRangeSettings(containerParent)
@@ -836,15 +862,22 @@ local function CreateHealPredictionSettings(containerParent, unit, updateCallbac
     ShowAbsorbToggle:SetLabel("Show Absorbs")
     ShowAbsorbToggle:SetValue(HealPredictionDB.Absorbs.Enabled)
     ShowAbsorbToggle:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.Absorbs.Enabled = value updateCallback() RefreshHealPredictionSettings() end)
-    ShowAbsorbToggle:SetRelativeWidth(0.5)
+    ShowAbsorbToggle:SetRelativeWidth(0.33)
     AbsorbSettings:AddChild(ShowAbsorbToggle)
 
     local UseStripedTextureAbsorbToggle = AG:Create("CheckBox")
     UseStripedTextureAbsorbToggle:SetLabel("Use Striped Texture")
     UseStripedTextureAbsorbToggle:SetValue(HealPredictionDB.Absorbs.UseStripedTexture)
     UseStripedTextureAbsorbToggle:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.Absorbs.UseStripedTexture = value updateCallback() end)
-    UseStripedTextureAbsorbToggle:SetRelativeWidth(0.5)
+    UseStripedTextureAbsorbToggle:SetRelativeWidth(0.33)
     AbsorbSettings:AddChild(UseStripedTextureAbsorbToggle)
+
+    local MatchParentHeightToggle = AG:Create("CheckBox")
+    MatchParentHeightToggle:SetLabel("Match Parent Height")
+    MatchParentHeightToggle:SetValue(HealPredictionDB.Absorbs.MatchParentHeight)
+    MatchParentHeightToggle:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.Absorbs.MatchParentHeight = value updateCallback() RefreshHealPredictionSettings() end)
+    MatchParentHeightToggle:SetRelativeWidth(0.33)
+    AbsorbSettings:AddChild(MatchParentHeightToggle)
 
     local AbsorbColourPicker = AG:Create("ColorPicker")
     AbsorbColourPicker:SetLabel("Absorb Colour")
@@ -861,6 +894,7 @@ local function CreateHealPredictionSettings(containerParent, unit, updateCallbac
     AbsorbHeightSlider:SetSliderValues(1, FrameDB.Height - 2, 0.1)
     AbsorbHeightSlider:SetRelativeWidth(0.33)
     AbsorbHeightSlider:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.Absorbs.Height = value updateCallback() end)
+    AbsorbHeightSlider:SetDisabled(HealPredictionDB.Absorbs.MatchParentHeight or HealPredictionDB.Absorbs.Position == "ATTACH")
     AbsorbSettings:AddChild(AbsorbHeightSlider)
 
     local AbsorbPositionDropdown = AG:Create("Dropdown")
@@ -868,7 +902,7 @@ local function CreateHealPredictionSettings(containerParent, unit, updateCallbac
     AbsorbPositionDropdown:SetLabel("Position")
     AbsorbPositionDropdown:SetValue(HealPredictionDB.Absorbs.Position)
     AbsorbPositionDropdown:SetRelativeWidth(0.33)
-    AbsorbPositionDropdown:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.Absorbs.Position = value updateCallback() end)
+    AbsorbPositionDropdown:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.Absorbs.Position = value updateCallback() RefreshHealPredictionSettings() end)
     AbsorbSettings:AddChild(AbsorbPositionDropdown)
 
     local HealAbsorbSettings = GUIWidgets.CreateInlineGroup(containerParent, "Heal Absorb Settings")
@@ -876,15 +910,22 @@ local function CreateHealPredictionSettings(containerParent, unit, updateCallbac
     ShowHealAbsorbToggle:SetLabel("Show Heal Absorbs")
     ShowHealAbsorbToggle:SetValue(HealPredictionDB.HealAbsorbs.Enabled)
     ShowHealAbsorbToggle:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.HealAbsorbs.Enabled = value updateCallback() RefreshHealPredictionSettings() end)
-    ShowHealAbsorbToggle:SetRelativeWidth(0.5)
+    ShowHealAbsorbToggle:SetRelativeWidth(0.33)
     HealAbsorbSettings:AddChild(ShowHealAbsorbToggle)
 
     local UseStripedTextureHealAbsorbToggle = AG:Create("CheckBox")
     UseStripedTextureHealAbsorbToggle:SetLabel("Use Striped Texture")
     UseStripedTextureHealAbsorbToggle:SetValue(HealPredictionDB.HealAbsorbs.UseStripedTexture)
     UseStripedTextureHealAbsorbToggle:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.HealAbsorbs.UseStripedTexture = value updateCallback() end)
-    UseStripedTextureHealAbsorbToggle:SetRelativeWidth(0.5)
+    UseStripedTextureHealAbsorbToggle:SetRelativeWidth(0.33)
     HealAbsorbSettings:AddChild(UseStripedTextureHealAbsorbToggle)
+
+    local MatchParentHeightHealAbsorbToggle = AG:Create("CheckBox")
+    MatchParentHeightHealAbsorbToggle:SetLabel("Match Parent Height")
+    MatchParentHeightHealAbsorbToggle:SetValue(HealPredictionDB.HealAbsorbs.MatchParentHeight)
+    MatchParentHeightHealAbsorbToggle:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.HealAbsorbs.MatchParentHeight = value updateCallback() RefreshHealPredictionSettings() end)
+    MatchParentHeightHealAbsorbToggle:SetRelativeWidth(0.33)
+    HealAbsorbSettings:AddChild(MatchParentHeightHealAbsorbToggle)
 
     local HealAbsorbColourPicker = AG:Create("ColorPicker")
     HealAbsorbColourPicker:SetLabel("Heal Absorb Colour")
@@ -901,6 +942,7 @@ local function CreateHealPredictionSettings(containerParent, unit, updateCallbac
     HealAbsorbHeightSlider:SetSliderValues(1, FrameDB.Height - 2, 0.1)
     HealAbsorbHeightSlider:SetRelativeWidth(0.33)
     HealAbsorbHeightSlider:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.HealAbsorbs.Height = value updateCallback() end)
+    HealAbsorbHeightSlider:SetDisabled(HealPredictionDB.HealAbsorbs.MatchParentHeight or HealPredictionDB.HealAbsorbs.Position == "ATTACH")
     HealAbsorbSettings:AddChild(HealAbsorbHeightSlider)
 
     local HealAbsorbPositionDropdown = AG:Create("Dropdown")
@@ -908,12 +950,14 @@ local function CreateHealPredictionSettings(containerParent, unit, updateCallbac
     HealAbsorbPositionDropdown:SetLabel("Position")
     HealAbsorbPositionDropdown:SetValue(HealPredictionDB.HealAbsorbs.Position)
     HealAbsorbPositionDropdown:SetRelativeWidth(0.33)
-    HealAbsorbPositionDropdown:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.HealAbsorbs.Position = value updateCallback() end)
+    HealAbsorbPositionDropdown:SetCallback("OnValueChanged", function(_, _, value) HealPredictionDB.HealAbsorbs.Position = value updateCallback() RefreshHealPredictionSettings() end)
     HealAbsorbSettings:AddChild(HealAbsorbPositionDropdown)
 
     function RefreshHealPredictionSettings()
         GUIWidgets.DeepDisable(AbsorbSettings, not HealPredictionDB.Absorbs.Enabled, ShowAbsorbToggle)
         GUIWidgets.DeepDisable(HealAbsorbSettings, not HealPredictionDB.HealAbsorbs.Enabled, ShowHealAbsorbToggle)
+        AbsorbHeightSlider:SetDisabled(HealPredictionDB.Absorbs.MatchParentHeight or HealPredictionDB.Absorbs.Position == "ATTACH")
+        HealAbsorbHeightSlider:SetDisabled(HealPredictionDB.HealAbsorbs.MatchParentHeight or HealPredictionDB.HealAbsorbs.Position == "ATTACH")
     end
 
     RefreshHealPredictionSettings()
