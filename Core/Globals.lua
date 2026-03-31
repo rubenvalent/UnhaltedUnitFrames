@@ -192,7 +192,9 @@ local function AddAnchorsToBCDM()
         ["UUF_Target"] = "|cFF8080FFUnhalted|rUnitFrames: Target Frame",
         ["UUF_Pet"] = "|cFF8080FFUnhalted|rUnitFrames: Pet Frame",
     }
-    BCDMG:AddAnchors("UnhaltedUnitFrames", {"Utility", "Custom", "AdditionalCustom", "Item", "ItemSpell", "Trinket"}, UUF_Anchors)
+    if BCDMG then
+        BCDMG:AddAnchors("UnhaltedUnitFrames", {"Utility", "CustomViewer", "Custom", "AdditionalCustom", "Item", "ItemSpell", "Trinket"}, UUF_Anchors)
+    end
 end
 
 function UUF:Init()
@@ -463,6 +465,10 @@ function UUF:CleanTruncateUTF8String(text)
     return text
 end
 
+function UUF:IsSecretValue(value)
+    return value ~= nil and type(issecretvalue) == "function" and issecretvalue(value)
+end
+
 function UUF:GetSecondaryPowerType()
     local class = select(2, UnitClass("player"))
     local spec = C_SpecializationInfo.GetSpecialization()
@@ -487,25 +493,86 @@ function UUF:GetSecondaryPowerType()
     return nil
 end
 
+function UUF:HasActiveSecondaryPowerBar(unitFrame, unit)
+    local SecondaryPowerBarDB = UUF.db.profile.Units[UUF:GetNormalizedUnit(unit)].SecondaryPowerBar
+    return SecondaryPowerBarDB and SecondaryPowerBarDB.Enabled and (unitFrame.Runes or unitFrame.ClassPower)
+end
+
+local function NormalizeBarPosition(value, fallback)
+    if value == "TOP" or value == "BOTTOM" then
+        return value
+    end
+    return fallback
+end
+
+function UUF:GetConfiguredPowerBarPosition(unit)
+    local PowerBarDB = UUF.db.profile.Units[UUF:GetNormalizedUnit(unit)].PowerBar
+    if not PowerBarDB then return "BOTTOM" end
+    if PowerBarDB.Position then
+        return NormalizeBarPosition(PowerBarDB.Position, "BOTTOM")
+    end
+    if PowerBarDB.SwapPositionWithSecondary then
+        return "TOP"
+    end
+    return "BOTTOM"
+end
+
+function UUF:GetConfiguredSecondaryPowerBarPosition(unit)
+    local UnitDB = UUF.db.profile.Units[UUF:GetNormalizedUnit(unit)]
+    local SecondaryPowerBarDB = UnitDB.SecondaryPowerBar
+    if not SecondaryPowerBarDB then return "TOP" end
+    if SecondaryPowerBarDB.Position then
+        return NormalizeBarPosition(SecondaryPowerBarDB.Position, "TOP")
+    end
+    if UnitDB.PowerBar and UnitDB.PowerBar.SwapPositionWithSecondary then
+        return "BOTTOM"
+    end
+    return "TOP"
+end
+
+function UUF:GetSecondaryPowerBarStackOffset(unitFrame, unit)
+    if not UUF:HasActiveSecondaryPowerBar(unitFrame, unit) then return 0 end
+
+    local PowerBarDB = UUF.db.profile.Units[UUF:GetNormalizedUnit(unit)].PowerBar
+    if not (PowerBarDB and PowerBarDB.Enabled and unitFrame.Power) then
+        return 0
+    end
+
+    if UUF:GetConfiguredPowerBarPosition(unit) ~= UUF:GetConfiguredSecondaryPowerBarPosition(unit) then
+        return 0
+    end
+
+    return PowerBarDB.Height + 1
+end
+
 function UUF:UpdateHealthBarLayout(unitFrame, unit)
     local PowerBarDB = UUF.db.profile.Units[UUF:GetNormalizedUnit(unit)].PowerBar
     local SecondaryPowerBarDB = UUF.db.profile.Units[UUF:GetNormalizedUnit(unit)].SecondaryPowerBar
 
-    local topOffset = -1
-    local bottomOffset = 1
+        local topDepth = 0
+    local bottomDepth = 0
 
-    local hasSecondaryPower =
-        SecondaryPowerBarDB
-        and SecondaryPowerBarDB.Enabled
-        and (unitFrame.Runes or unitFrame.ClassPower)
+    local hasPrimaryPower = PowerBarDB and PowerBarDB.Enabled and unitFrame.Power
+    local hasSecondaryPower = UUF:HasActiveSecondaryPowerBar(unitFrame, unit)
 
-    if hasSecondaryPower then
-        topOffset = topOffset - SecondaryPowerBarDB.Height - 1
+    if hasPrimaryPower then
+        if UUF:GetConfiguredPowerBarPosition(unit) == "TOP" then
+            topDepth = topDepth + PowerBarDB.Height + 1
+        else
+            bottomDepth = bottomDepth + PowerBarDB.Height + 1
+        end
     end
 
-    if PowerBarDB and PowerBarDB.Enabled then
-        bottomOffset = bottomOffset + PowerBarDB.Height + 1
+     if hasSecondaryPower then
+        if UUF:GetConfiguredSecondaryPowerBarPosition(unit) == "TOP" then
+            topDepth = topDepth + SecondaryPowerBarDB.Height + 1
+        else
+            bottomDepth = bottomDepth + SecondaryPowerBarDB.Height + 1
+        end
     end
+
+    local topOffset = -1 - topDepth
+    local bottomOffset = 1 + bottomDepth
 
     unitFrame.HealthBackground:ClearAllPoints()
     unitFrame.HealthBackground:SetPoint("TOPLEFT", unitFrame.Container, "TOPLEFT", 1, topOffset)
@@ -517,21 +584,31 @@ function UUF:UpdateHealthBarLayout(unitFrame, unit)
 end
 
 
+
 UUF.AURA_FILTERS = {
     Buffs = {
-        ["HELPFUL"] = {Title = "Helpful", Desc = "Buffs"},
-        ["HELPFUL|PLAYER"] = {Title = "Player", Desc = "Buffs applied by the Player"},
-        ["HELPFUL|RAID"] = {Title = "Raid", Desc = "|cFF40FF40Helpful|r: Buffs filtered by the Player's Class."},
-        ["EXTERNAL_DEFENSIVE"] = {Title = "External Defensives", Desc = "Externals."},
-        ["BIG_DEFENSIVE"] = {Title = "Big Defensives", Desc = "Big Defensive Buffs."},
-        ["IMPORTANT"] = {Title = "Important", Desc = "Important Buffs. Flagged by |cFF00B0F7Blizzard|r."},
+        Modifiers = {
+            ["PLAYER"] = {Title = "Player", Desc = "Buffs Applied by Player."},
+            ["RAID"] = {Title = "Raid", Desc = "Buffs that appear on Raid Frames."},
+            ["CANCELABLE"] = {Title = "Cancelable", Desc = "Cancelable Buffs."},
+            ["NOT_CANCELABLE"] = {Title = "Not Cancelable", Desc = "Un-cancelable Buffs.."},
+        },
+        Exclusive = {
+            ["EXTERNAL_DEFENSIVE"] = {Title = "External Defensives", Desc = "External Defensive - |cFF00B0F7Blizzard|r."},
+            ["BIG_DEFENSIVE"] = {Title = "Big Defensives", Desc = "Major Defensive Buffs - |cFF00B0F7Blizzard|r."},
+            ["IMPORTANT"] = {Title = "Important", Desc = "Important Buffs - |cFF00B0F7Blizzard|r."},
+        },
     },
     Debuffs = {
-        ["HARMFUL"] = {Title = "Harmful", Desc = "Debuffs"},
-        ["HARMFUL|PLAYER"] = {Title = "Player", Desc = "Debuffs applied by the Player"},
-        ["HARMFUL|RAID"] = {Title = "Raid", Desc = "|cFFFF4040Harmful|r: Debuffs that show up on Raid Frames."},
-        ["CROWD_CONTROL"] = {Title = "Crowd Control", Desc = "Crowd Control Effects."},
-        ["RAID_PLAYER_DISPELLABLE"] = {Title = "Player Dispellable", Desc = "Auras that the Player can dispel."},
-        ["IMPORTANT"] = {Title = "Important", Desc = "Important Debuffs. Flagged by |cFF00B0F7Blizzard|r."},
+        Modifiers = {
+            ["PLAYER"] = {Title = "Player", Desc = "Debuffs Applied by Player."},
+            ["RAID"] = {Title = "Raid", Desc = "Debuffs that appear on Raid Frames."},
+            ["INCLUDE_NAME_PLATE_ONLY"] = {Title = "Nameplate Only", Desc = "Nameplate Debuffs."},
+        },
+        Exclusive = {
+            ["CROWD_CONTROL"] = {Title = "Crowd Control", Desc = "Crowd Control Debuffs."},
+            ["RAID_PLAYER_DISPELLABLE"] = {Title = "Player Dispellable", Desc = "Debuffs Dispellable by Player."},
+            ["IMPORTANT"] = {Title = "Important", Desc = "Important Debuffs - |cFF00B0F7Blizzard|r."},
+        },
     }
 }
