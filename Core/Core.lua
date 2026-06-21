@@ -46,4 +46,5 @@ function UnhaltedUnitFrames:OnEnable()
     fadeEventFrame:SetScript("OnEvent", function()
         UUF:UpdateOutOfCombatFade()
     end)
+    
 end
