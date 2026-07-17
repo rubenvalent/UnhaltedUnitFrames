@@ -47,4 +47,6 @@ function UnhaltedUnitFrames:OnEnable()
         UUF:UpdateOutOfCombatFade()
     end)
     
+    UUF:SpawnUnitFrame("party")
+    UUF:SpawnUnitFrame("raid")
 end
