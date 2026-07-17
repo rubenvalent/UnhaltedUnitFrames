@@ -60,10 +60,7 @@ function UUF:CreateUnitFrame(unitFrame, unit)
     UUF:CreateUnitAuras(unitFrame, unit)
     UUF:CreateUnitTags(unitFrame, unit)
     ApplyScripts(unitFrame)
-    if isRaid and not unitFrame.isUUFUnitFrame then
-        unitFrame.isUUFUnitFrame = true
-        UUF.RAID_FRAMES[#UUF.RAID_FRAMES + 1] = unitFrame
-    end
+    if isRaid then UUF:RegisterRaidFrame(unitFrame) end
     return unitFrame
 end
 
@@ -209,6 +206,7 @@ function UUF:SpawnUnitFrame(unit)
 
     oUF:RegisterStyle(UUF:FetchFrameName(unit), function(unitFrame) UUF:CreateUnitFrame(unitFrame, unit) end)
     oUF:SetActiveStyle(UUF:FetchFrameName(unit))
+	if unit == "party" or unit == "raid" then return UUF:SpawnGroupFrame(unit, FrameDB) end
 
     if unit == "boss" then
         for i = 1, UUF.MAX_BOSS_FRAMES do
