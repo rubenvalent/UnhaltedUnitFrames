@@ -778,4 +778,12 @@ UUF.AURA_BLACKLIST = {
     [71041] = true,     -- Dungeon Deserter
     [80354] = true,     -- Temporal Displacement
     [95809] = true,     -- Hunter Pet Insanity
+    [1227147] = true,   -- In Your Neighborhood
+    [1256081] = true,   -- Sign of the Shadowlands
+    [1295927] = true,   -- Lindormi's Glow
+
+    -- Paladin Auras
+    [465] = true,       -- Devotion Aura
+    [32223] = true,     -- Crusader Aura
+    [317920] = true,    -- Concentration Aura
 }

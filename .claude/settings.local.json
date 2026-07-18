@@ -4,7 +4,10 @@
       "Bash(ls:*)",
       "Bash(wc:*)",
       "Bash(find:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(git -C \"/mnt/c/Program Files \\(x86\\)/World of Warcraft/_retail_/Interface/AddOns/UnhaltedUnitFrames\" log --all --oneline -- Core/Config/GUI.lua)",
+      "Bash(git -C \"/mnt/c/Program Files \\(x86\\)/World of Warcraft/_retail_/Interface/AddOns/UnhaltedUnitFrames\" log --all -S\"CreateTestBossFrames\" --oneline)",
+      "Bash(git -C \"/mnt/c/Program Files \\(x86\\)/World of Warcraft/_retail_/Interface/AddOns/UnhaltedUnitFrames\" log --all -p -S\"function UUF:CreateTestBossFrames\" -- '*.lua')"
     ],
     "deny": [],
     "ask": []

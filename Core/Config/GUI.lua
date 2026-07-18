@@ -193,12 +193,12 @@ end
 
 local function EnableBossFramesTestMode()
     UUF.BOSS_TEST_MODE = true
-    UUF:CreateTestBossFrames()
+    UUF:UpdateTestEnvironment("boss", "all")
 end
 
 local function DisableBossFramesTestMode()
     UUF.BOSS_TEST_MODE = false
-    UUF:CreateTestBossFrames()
+    UUF:UpdateTestEnvironment("boss", "all")
 end
 
 local function DisableAllTestModes()
@@ -214,7 +214,7 @@ local function DisableAllTestModes()
 			UUF:CreateTestCastBar(UUF[unit:upper()], unit)
 		end
 	end
-    UUF:CreateTestBossFrames()
+    UUF:UpdateTestEnvironment("boss", "all")
     for _, frameMover in pairs(UUF.MOVERS or {}) do frameMover:Hide() end
 end
 
