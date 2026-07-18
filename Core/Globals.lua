@@ -6,6 +6,13 @@ UUF.CASTBAR_TEST_MODE = false
 UUF.BOSS_TEST_MODE = false
 UUF.BOSS_FRAMES = {}
 UUF.MAX_BOSS_FRAMES = 5
+UUF.PARTY_FRAMES = {}
+UUF.MAX_PARTY_FRAMES = 4
+UUF.RAID_FRAMES = {}
+UUF.RAID_HEADERS = {}
+UUF.MAX_RAID_FRAMES = 40
+UUF.MAX_RAID_GROUPS = 8
+UUF.MAX_RAID_FRAMES_PER_GROUP = 5
 local CooldownDurationFormatter = C_StringUtil.CreateNumericRuleFormatter()
 
 UUF.LSM = LibStub("LibSharedMedia-3.0")
@@ -104,9 +111,14 @@ function UUF:FetchFrameName(unit)
         ["focustarget"] = "UUF_FocusTarget",
         ["pet"] = "UUF_Pet",
         ["boss"] = "UUF_Boss",
+        ["party"] = "UUF_Party",
+        ["partyplayer"] = "UUF_PartyPlayer",
+        ["raid"] = "UUF_Raid",
     }
     if not unit then return end
     if unit:match("^boss(%d+)$") then local unitID = unit:match("^boss(%d+)$") return "UUF_Boss" .. unitID end
+    if unit:match("^party(%d+)$") then local unitID = unit:match("^party(%d+)$") return "UUF_Party" .. unitID end
+    if unit:match("^raid(%d+)$") then local unitID = unit:match("^raid(%d+)$") return "UUF_Raid" .. unitID end
     return UnitToFrame[unit]
 end
 
@@ -253,6 +265,15 @@ function UUF:LoadCustomColours()
         oUF.colors.reaction[reaction] = oUF:CreateColor(color[1], color[2], color[3])
     end
 
+    local DefaultStatusColours = UUF:GetDefaultDB().profile.General.Colours.Status
+    local StatusColours = General.Colours.Status or DefaultStatusColours
+    local tappedColor = StatusColours.Tapped or DefaultStatusColours.Tapped
+    local disconnectedColor = StatusColours.Disconnected or DefaultStatusColours.Disconnected
+    local deadBackdropColor = StatusColours.DeadBackdrop or DefaultStatusColours.DeadBackdrop
+    oUF.colors.tapped = oUF:CreateColor(tappedColor[1], tappedColor[2], tappedColor[3])
+    oUF.colors.disconnected = oUF:CreateColor(disconnectedColor[1], disconnectedColor[2], disconnectedColor[3])
+    oUF.colors.deadBackdrop = oUF:CreateColor(deadBackdropColor[1], deadBackdropColor[2], deadBackdropColor[3])
+
     if General.Colours.Dispel then
         local dispelMap = {
             Magic = oUF.Enum.DispelType.Magic,
@@ -350,7 +371,7 @@ function UUF:GetReactionColour(reaction)
 end
 
 function UUF:GetNormalizedUnit(unit)
-    local normalizedUnit = unit == "vehicle" and "player" or unit:match("^boss%d+$") and "boss" or unit
+    local normalizedUnit = unit == "vehicle" and "player" or unit == "partyplayer" and "party" or unit:match("^boss%d+$") and "boss" or unit:match("^party%d+$") and "party" or unit:match("^raid%d+$") and "raid" or unit
     return normalizedUnit
 end
 

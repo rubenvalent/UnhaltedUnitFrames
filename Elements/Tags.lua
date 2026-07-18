@@ -5,7 +5,7 @@ local function CreateUnitTag(unitFrame, unit, tagDB)
     local TagDB = UUF.db.profile.Units[UUF:GetNormalizedUnit(unit)].Tags[tagDB]
 
     if not unitFrame.Tags[tagDB] then
-        unitFrame.Tags[tagDB] = unitFrame.HighLevelContainer:CreateFontString(UUF:FetchFrameName(unit) .. "_" .. tagDB, "ARTWORK")
+        unitFrame.Tags[tagDB] = unitFrame.HighLevelContainer:CreateFontString(UUF:FetchFrameName(unit) .. "_" .. tagDB, "ARTWORK", "GameFontNormal")
         unitFrame.Tags[tagDB]:SetFont(UUF.Media.Font, TagDB.FontSize, GeneralDB.Fonts.FontFlag)
         unitFrame.Tags[tagDB]:SetVertexColor(TagDB.Colour[1], TagDB.Colour[2], TagDB.Colour[3], 1)
         if GeneralDB.Fonts.Shadow.Enabled then
@@ -64,6 +64,20 @@ function UUF:UpdateUnitTags()
                     end
                 end
             end
+        elseif unit == "party" then
+            for i = 1, UUF.MAX_PARTY_FRAMES do
+                local partyFrame = UUF["PARTY"..i]
+                if partyFrame then
+                    for tagName in pairs(UnitDB.Tags) do
+                        UUF:UpdateUnitTag(partyFrame, "party"..i, tagName)
+                    end
+                end
+            end
+            if UUF.PARTYPLAYER then
+                for tagName in pairs(UnitDB.Tags) do
+                    UUF:UpdateUnitTag(UUF.PARTYPLAYER, "partyplayer", tagName)
+                end
+            end
         else
             local frame = UUF[unit:upper()]
             if frame then
@@ -74,5 +88,4 @@ function UUF:UpdateUnitTags()
         end
     end
 end
-
 
